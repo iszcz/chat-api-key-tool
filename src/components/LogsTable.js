@@ -612,8 +612,11 @@ const LogsTable = () => {
                         <Tag color="green" style={{ fontSize: '16px' }}>
                             总额：${balance.toFixed(2)}
                         </Tag>
-                        <Tag color="blue" style={{ fontSize: '16px' }}>
+                        <Tag color="yellow" style={{ fontSize: '16px' }}>
                             已用：${usage.toFixed(2)}
+                        </Tag>
+                        <Tag color="blue" style={{ fontSize: '16px' }}>
+                            余额：${(balance-usage).toFixed(2)}
                         </Tag>
                     </Space>
                 )}
