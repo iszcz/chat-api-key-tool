@@ -121,6 +121,29 @@ function renderTypeMj(type) {
           return <Tag color="black" size='large'>未知</Tag>;
       }
   }
+
+    function renderMode(type) {
+      switch (type) {
+        case 'TURBO':
+          return (
+            <Tag color='blue' size='large'>
+              Turbo
+            </Tag>
+          );
+        case 'RELAX':
+          return (
+            <Tag color='orange' size='large'>
+              Relax
+            </Tag>
+          );
+        default:
+          return (
+            <Tag color='green' size='large'>
+              Fast
+            </Tag>
+          );
+      }
+    }
   
   
   function renderStatus(type) {
@@ -150,8 +173,7 @@ const LogsTable = () => {
     const columns = [
         {
             title: '时间',
-            dataIndex: 'created_at',
-            width: '15%',  
+            dataIndex: 'created_at', 
             render: (text, record, index) => {
                 return (
                     <div>
@@ -249,7 +271,7 @@ const LogsTable = () => {
         {
           title: '提交时间',
           dataIndex: 'submit_time',
-          width: '15%', 
+          key: 'mj_submit_time',
           render: (text, record, index) => {
             return (
               <div>
@@ -261,6 +283,7 @@ const LogsTable = () => {
         {
           title: '类型',
           dataIndex: 'action',
+          key: 'mj_action',
           render: (text, record, index) => {
               return (
                   <div>
@@ -272,7 +295,7 @@ const LogsTable = () => {
         {
             title: '任务ID',
             dataIndex: 'mj_id',
-            width: '15%', 
+            key: 'mj_mj_id',
             render: (text, record, index) => {
                 return (
                   <div>
@@ -284,6 +307,7 @@ const LogsTable = () => {
         {
           title: '提交结果',
           dataIndex: 'code',
+          key: 'mj_code',
           render: (text, record, index) => {
               return (
                 <div>
@@ -293,8 +317,17 @@ const LogsTable = () => {
           },
         },
         {
+          title: '模式',
+          dataIndex: 'mode',
+          key: 'mj_mode',
+          render: (text, record, index) => {
+            return <div>{renderMode(text)}</div>;
+          },
+        },
+        {
             title: '任务状态',
             dataIndex: 'status',
+            key: 'mj_status',
             render: (text, record, index) => {
                 return (
                   <div>
@@ -306,6 +339,7 @@ const LogsTable = () => {
         {
             title: '进度',
             dataIndex: 'progress',
+            key: 'mj_progress',
             render: (text, record, index) => {
                 return (
                   <div>
@@ -315,8 +349,23 @@ const LogsTable = () => {
             },
         },
         {
+          title: '耗时',
+          dataIndex: 'task_time',
+          key: 'mj_task_time',
+          render: (text, record, index) => {
+            if (record.status == 'SUCCESS') {
+              return <div>{((record.finish_time - record.start_time) / 1000)} 秒</div>;
+            }
+            if (record.status == 'FAILURE' && record.start_time) {
+              return <div>{((record.start_time - record.submit_time) / 1000)} 秒</div>;
+            }
+            return '无';
+          },
+        },
+        {
           title: '结果图片',
           dataIndex: 'image_url',
+          key: 'mj_image_url',
           render: (text, record, index) => {
             if (!text) {
               return '无';
@@ -337,6 +386,7 @@ const LogsTable = () => {
         {
             title: 'Prompt',
             dataIndex: 'prompt',
+            key: 'mj_prompt',
             render: (text, record, index) => {
               // 如果text未定义，返回替代文本，例如空字符串''或其他
               if (!text) {
@@ -360,6 +410,7 @@ const LogsTable = () => {
         {
             title: 'PromptEn',
             dataIndex: 'prompt_en',
+            key: 'mj_prompt_en',
             render: (text, record, index) => {
               // 如果text未定义，返回替代文本，例如空字符串''或其他
               if (!text) {
@@ -383,6 +434,7 @@ const LogsTable = () => {
         {
             title: '失败原因',
             dataIndex: 'fail_reason',
+            key: 'mj_fail_reason',
             render: (text, record, index) => {
               // 如果text未定义，返回替代文本，例如空字符串''或其他
               if (!text) {
@@ -469,6 +521,12 @@ const LogsTable = () => {
     };
 
     const searchMjs = async (key) => {
+        
+        // 根据环境变量判断是否显示余额信息
+        if (process.env.REACT_APP_SHOW_BALANCE === "true") {
+            getBalance(keyValue); // 使用 keyValue 调用 getBalance
+        }
+
         if (key === '') {
             alert('请输入搜索关键字');
             return;
@@ -627,7 +685,6 @@ const LogsTable = () => {
                 columns={currentViewType === 'normal' ? columns : columnsmj} 
                 dataSource={data.logs}
                 loading={loading}
-                scroll={{ y: 800 }}
                 pagination={{
                     pageSize: pageSize,
                     total: data.logs.length,

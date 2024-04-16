@@ -8,7 +8,7 @@ function App() {
   return (
     // 使用margin: auto和指定width来实现水平居中以及宽度控制
     <div className="App" style={{
-      width: '70%', // 控制宽度为70%
+      width: '80%', // 控制宽度为70%
       margin: '0 auto', // 自动边距实现水平居中
       maxHeight: '800px' // 确保填满视口高度
     }}>
