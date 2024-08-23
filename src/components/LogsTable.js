@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 import {API, showError, timestamp2string} from '../helpers';
-import { Input, Button, Table, Tag, Layout,Space,Form,ImagePreview,Modal,Typography } from '@douyinfe/semi-ui'; 
+import { Input, Button, Table, Tag,Space,Form,ImagePreview,Modal,Typography } from '@douyinfe/semi-ui'; 
 import {ITEMS_PER_PAGE} from '../constants';
 import {renderQuota} from '../helpers/render';
 import { IconSearch } from '@douyinfe/semi-icons';
@@ -15,18 +15,6 @@ const colors = ['amber', 'blue', 'cyan', 'green', 'grey', 'indigo',
     'light-blue', 'lime', 'orange', 'pink',
     'purple', 'red', 'teal', 'violet', 'yellow'
 ]
-const MODE_OPTIONS = [
-    {key: 'all', text: '全部用户', value: 'all'},
-    {key: 'self', text: '当前用户', value: 'self'}
-];
-
-const LOG_OPTIONS = [
-    {key: '0', text: '全部', value: 0},
-    {key: '1', text: '充值', value: 1},
-    {key: '2', text: '消费', value: 2},
-    {key: '3', text: '管理', value: 3},
-    {key: '4', text: '系统', value: 4}
-];
 
 function renderType(type) {
     switch (type) {
@@ -163,7 +151,6 @@ function renderTypeMj(type) {
         return <Tag color="black" size='large'>未知</Tag>;
     }
   }
-  
 
 const LogsTable = () => {
     const [modalImageUrl, setModalImageUrl] = useState('');
@@ -353,10 +340,10 @@ const LogsTable = () => {
           dataIndex: 'task_time',
           key: 'mj_task_time',
           render: (text, record, index) => {
-            if (record.status == 'SUCCESS') {
+            if (record.status === 'SUCCESS') {
               return <div>{((record.finish_time - record.start_time) / 1000)} 秒</div>;
             }
-            if (record.status == 'FAILURE' && record.start_time) {
+            if (record.status === 'FAILURE' && record.start_time) {
               return <div>{((record.start_time - record.submit_time) / 1000)} 秒</div>;
             }
             return '无';
@@ -460,6 +447,8 @@ const LogsTable = () => {
 
     const [balance, setBalance] = useState(0)
     const [usage, setUsage] = useState(0)
+    const [rpm, setRpm] = useState(0)
+    const [tpm, setTpm] = useState(0)
 
     const [loading, setLoading] = useState(false);
     const [keyValue, setKeyValue] = useState(''); 
@@ -482,7 +471,6 @@ const LogsTable = () => {
         searching: false,
         stat: {
             quota: 0,
-            token: 0
         }
     });
 
@@ -499,7 +487,17 @@ const LogsTable = () => {
             if (res.data && typeof res.data === 'object' && 'success' in res.data) {
                 const {success, message, data: logsData} = res.data;
                 if (success) {
+        
+                    // 筛选出一分钟内的日志
+                    const oneMinuteAgo = Date.now() - 60 * 1000;
+                    const oneMinuteLogs = logsData.filter(log => new Date(log.created_at * 1000) >= oneMinuteAgo);
+
+                    // 计算 logsRpm 和 logsTpm
+                    setRpm(oneMinuteLogs.length);
+                    setTpm(oneMinuteLogs.reduce((acc, curr) => acc + curr.prompt_tokens + curr.completion_tokens, 0));
+
                     let totalQuota = logsData ? logsData.reduce((acc, curr) => acc + curr.quota, 0) : 0;
+                    console.log(oneMinuteLogs.length);
                     setData(prevData => ({
                         ...prevData,
                         logs: logsData || [],
@@ -675,6 +673,12 @@ const LogsTable = () => {
                         </Tag>
                         <Tag color="blue" style={{ fontSize: '16px' }}>
                             余额：${(balance-usage).toFixed(2)}
+                        </Tag>
+                        <Tag color="red" style={{ fontSize: '16px' }}>
+                            RPM：{rpm}
+                        </Tag>
+                        <Tag color="purple" style={{ fontSize: '16px' }}>
+                            TPM：{tpm}
                         </Tag>
                     </Space>
                 )}
